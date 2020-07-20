@@ -1,13 +1,13 @@
 %% cellSel ui driver
 % Get merged files
 clear
-dirp = 'D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200128 Spectra\HV20 Merge\ExSat';
-flist = dir(strcat(dirp,'\*.tiff'));
+dirp = 'D:\OneDrive - rice.edu\Francois\RedGEVIs\Wet\Results\20200628 photoactivation\exp50ms';
+flist = dir(strcat(dirp,'\Tiff\*.tiff'));
 mkdir(strcat(dirp,'\maskTiff'));
 mkdir(strcat(dirp,'\maskMat'));
 merge = 'label';
-% ui ROI select
-for k = 1:length(flist)
+%% ui ROI select
+for k = 2:length(flist)
     I = imread(strcat(flist(k).folder,'\',flist(k).name));
     [~,ImgName,~] = fileparts(flist(k).name)
     disp(strcat('k = ',num2str(k),'; ImgName = ',ImgName));
@@ -25,14 +25,14 @@ end
 % ui ROI select
 clear
 % load established mat file
-dirp = 'D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200215 mGold spectrum\700-1080-700\ExSat';
-flist = dir(strcat(dirp,'\*.tiff'));
+dirp = 'D:\OneDrive - rice.edu\Francois\RedGEVIs\Wet\Results\20200628 photoactivation\exp50ms';
+flist = dir(strcat(dirp,'\Tiff\*.tiff'));
 tifflist = dir(strcat(dirp,'\maskMat\*.mat'));
 mkdir(strcat(dirp,'\newmaskTiff'));
 mkdir(strcat(dirp,'\newmaskMat'));
 merge = 'label';
-% ui ROI select
-for k = 1:length(flist)
+%% ui ROI select
+for k = 1:1
     I = imread(strcat(flist(k).folder,'\',flist(k).name));
     load(fullfile(tifflist(k).folder, tifflist(k).name)); 
     [~,ImgName,~] = fileparts(flist(k).name);

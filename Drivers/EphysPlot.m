@@ -227,30 +227,33 @@ ylabel('Command Voltage (mV)')
 set(gcf, 'Position',  [510, 10, 400, 800])
 
 %% Compare Ephys with Fstim result
+% Ephys2Fstim = [4,6,12,11,5,1];
+% Ephys2Fstim = [6,7,12,16,4,5];
+Ephys2Fstim = [4,7,13,12,5,1];
+sel = [1:5,7];
+LongStim = 'Stim5';
+CtrlFP = 'cyOFP';
 figure(6) % Compare Ephys with Fstim
 clf
 hold on
-% Ephys2Fstim = [6,7,12,16,4,5];
-Ephys2Fstim = [4,7,12,16,5];
-% Ephys2Fstim = [4,6,12,11,5];
-sel = 1:5;
+
 EphysdFF0Mean = [];
 EphysdFF0Std = [];
 FstimLongdFF0Mean = [];
 FstimLongdFF0Std = [];
-for i = sel %height(Transition_curve)   
-    EphysdFF0Mean(i) = Transition_curve(i,9).Variables;
-    EphysdFF0Std(i) = Transition_curve(i,10).Variables;
+for i = 1:length(sel) %height(Transition_curve)   
+    EphysdFF0Mean(i) = Transition_curve(sel(i),9).Variables;
+    EphysdFF0Std(i) = Transition_curve(sel(i),10).Variables;
     FstimLongdFF0Mean(i) = T_well_stats(Ephys2Fstim(i),strcat(LongStim,'Mean')).Variables;
     FstimLongdFF0Std(i) = T_well_stats(Ephys2Fstim(i),strcat(LongStim,'Std')).Variables;
     errorbar(-EphysdFF0Mean(i),-FstimLongdFF0Mean(i),FstimLongdFF0Std(i),FstimLongdFF0Std(i),EphysdFF0Std(i),EphysdFF0Std(i),'.','MarkerSize',30)
 end
 x = -EphysdFF0Mean;
 y = -FstimLongdFF0Mean;
-[k, R2] = lnrFitting(x,y,false,true,6);
+[k, R2] = libplot.lnrFitting(x,y,false,true,6);
 xlabel({'Ephys VClamp = +30mV','-\DeltaF/F0'})
 ylabel({'Fstim = 100ms@100Hz','-\DeltaF/F0'})
-title('Ephys vs Fstim (cyOFP)')
+title(['Ephys vs Fstim (',CtrlFP,')'])
 axis([0 inf 0 inf])
 axis square
 legend(Transition_curve.Name(sel),'location','best')
@@ -263,19 +266,19 @@ EphysAPdFF0Mean = [];
 EphysAPdFF0Std = [];
 FstimShortdFF0Mean = [];
 FstimShortdFF0Std = [];
-for i = sel %1:size(Single_AP,1)
-    EphysAPdFF0Mean(i) = 1-Single_AP(i,5).Variables;
-    EphysAPdFF0Std(i) = Single_AP(i,6).Variables;
+for i = 1:length(sel) %1:size(Single_AP,1)
+    EphysAPdFF0Mean(i) = 1-Single_AP(sel(i),5).Variables;
+    EphysAPdFF0Std(i) = Single_AP(sel(i),6).Variables;
     FstimShortdFF0Mean(i) = T_well_stats(Ephys2Fstim(i),'StimShortMean').Variables;
     FstimShortdFF0Std(i) = T_well_stats(Ephys2Fstim(i),'StimShortStd').Variables;
     errorbar(EphysAPdFF0Mean(i),-FstimShortdFF0Mean(i),FstimShortdFF0Std(i),FstimShortdFF0Std(i),EphysAPdFF0Std(i),EphysAPdFF0Std(i),'.','MarkerSize',30)
 end
 x = EphysAPdFF0Mean;
 y = -FstimShortdFF0Mean;
-[k, R2] = lnrFitting(x,y,false,true,7);
+[k, R2] = libplot.lnrFitting(x,y,false,true,7);
 xlabel({'Ephys Single AP','-\DeltaF/F0'})
 ylabel({'Fstim = 1ms ','-\DeltaF/F0'})
-title('Ephys vs Fstim (cyOFP)')
+title(['Ephys vs Fstim (',CtrlFP,')'])
 axis([0 inf 0 inf])
 axis square
 legend(Single_AP.Name(sel),'location','best')
@@ -288,9 +291,9 @@ EphysTrainAPdFF0Mean = [];
 EphysTrainAPdFF0Std = [];
 FstimLongdFF0Mean = [];
 FstimLongdFF0Std = [];
-for i = sel %size(Train_AP,1)
-    EphysTrainAPdFF0Mean(i) = 1-Train_AP(i,5).Variables;
-    EphysTrainAPdFF0Std(i) = Train_AP(i,6).Variables;
+for i = 1:length(sel) %size(Train_AP,1)
+    EphysTrainAPdFF0Mean(i) = 1-Train_AP(sel(i),5).Variables;
+    EphysTrainAPdFF0Std(i) = Train_AP(sel(i),6).Variables;
     FstimLongdFF0Mean(i) = T_well_stats(Ephys2Fstim(i),strcat(LongStim,'Mean')).Variables;
     FstimLongdFF0Std(i) = T_well_stats(Ephys2Fstim(i),strcat(LongStim,'Std')).Variables;
     errorbar(EphysTrainAPdFF0Mean(i),-FstimLongdFF0Mean(i),FstimLongdFF0Std(i),FstimLongdFF0Std(i),EphysTrainAPdFF0Std(i),EphysTrainAPdFF0Std(i),'.','MarkerSize',30)
@@ -298,28 +301,13 @@ end
 x = EphysTrainAPdFF0Mean;
 y = -FstimLongdFF0Mean;
 p = fitlm(x,y,'Intercept',false);
-[k, R2] = lnrFitting(x,y,false,true,8);
+[k, R2] = libplot.lnrFitting(x,y,false,true,8);
 xlabel({'Ephys train AP','-\DeltaF/F0'})
 ylabel({'Fstim = 100ms 100Hz','-\DeltaF/F0'})
-title('Ephys vs Fstim (cyOFP)')
+title(['Ephys vs Fstim (',CtrlFP,')'])
 axis square
 axis([0 inf 0 inf])
 legend(Train_AP.Name(sel),'location','best')
 set(gcf, 'Position',  [1550, 10, 500, 500])
 
-function [k, R2] = lnrFitting(x,y,intercept,figureTrue,figNumber)
-    p = fitlm(x,y,'Intercept',intercept);   
-    k = p.Coefficients(1,1).Variables;
-    R2 = p.Rsquared.Adjusted;
-    if figureTrue
-        figure(figNumber)
-        if min(x) <0
-            linestart = min(min(x),min(y));
-        else
-            linestart = 0;
-        end
-        xplot = linestart:0.01:max(max(x),max(y));        
-        plot(xplot,xplot*p.Coefficients(1,1).Variables,'--k')
-        text(linestart+0.01,max(y),{strcat('k = ',num2str(k)),strcat('R2 = ',num2str(R2))},'Color',[0 0 0])
-    end
-end
+
