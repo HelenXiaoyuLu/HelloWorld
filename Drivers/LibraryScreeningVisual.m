@@ -4,10 +4,12 @@ clear
 dirPath = 'D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\BenchmarkingPlots\2pLibraries\*.mat';
 files = dir(dirPath);
 Libraries = struct;
+T_screening_2pFstim = table();
 for i=1:length(files)
     L = load(fullfile(dirPath,files(i).name));
     Libraries(i).Data = L;
 end
+
  %% load library from Wellbase_RefineVisual
 
 % load('D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\BenchmarkingPlots\20200223 repeated screening\200223 repeat screening for GV75and GV79_plate1_1ptrigger_result_ver200409.mat');
@@ -17,7 +19,7 @@ T_well.stim_shortmean = mean(T_well{:, {'Stim_1', 'Stim_2' ,'Stim_3'}}, 2);
 T_well.stim_shortstd = std(T_well{:, {'Stim_1', 'Stim_2' ,'Stim_3'}}, 1, 2); 
 T_well.stim_midmean = mean(T_well{:, {'Stim_4', 'Stim_5' ,'Stim_6'}}, 2); 
 T_well.stim_midstd = std(T_well{:, {'Stim_4', 'Stim_5' ,'Stim_6'}}, 1, 2); 
-T_well.Kineticsmean = T_well.stim_shortmean./; 
+% T_well.Kineticsmean = T_well.stim_shortmean./; 
 T_well.Kineticsstd = std(T_well{:, {'Stim_4', 'Stim_5' ,'Stim_6'}}, 1, 2); 
 
 %% Barplot: Short & Long stim
@@ -161,3 +163,62 @@ ylabel('dFF0_shortStim')
 ax = gca;
 ax.XTickLabelRotation=90;
 ax.XAxis.TickLength = [0 0];
+
+%% Edit screening parents
+Screening.Parent(1:6) = repmat("ASAP1",6,1);
+Screening.Parent(8:153) = repmat("ASAP2s",146,1);
+Screening.Parent([7,154:323]) = repmat("ASAP2s-H152E",171,1);
+Screening.Parent(324:471) = repmat("ASAP2s-H152E-T207H",148,1);
+Screening.Parent(472:529) = repmat("VSD-Mutations",58,1);
+Screening.Parent(530:684) = repmat("ASAP2s-T207H",155,1);
+Screening.Parent([685:691,693]) = repmat("JEDI-1P",8,1);
+Screening.Parent(692) = "JEDI-2P";
+
+%% 3D scatter
+grouping = findgroups(Screening.("Standard Notation "));
+groupnames = splitapply(@unique, Screening.("Standard Notation "), grouping);
+controls = ["ASAP1","ASAP2s","ASAP2-H152E","JEDI-1P","JEDI-2P"];
+figure()
+hold on
+colormap colorcube(30)
+map = colormap;
+for i = 1:max(grouping(:))
+    s(i) = scatter3(Screening.GRratioMean_TwoPhoton(find(grouping == i)),...
+        Screening.dFF0_shortStim_TwoPhoton(find(grouping == i)),...
+        Screening.DI_short_TwoPhoton(find(grouping == i)),...
+        [],map(i,:),'filled','MarkerFaceAlpha',0.5);
+    s(i).Tag = groupnames(i);
+    if ~isempty(find(controls == groupnames(i)))
+        s(i).Marker = 'p';
+        s(i).MarkerFaceColor = 'flat';
+        s(i).MarkerFaceAlpha = 1;
+        s(i).SizeData = 100;
+    end
+end
+box on
+legend(s,groupnames)
+axis([0 3 -0.35 0.05 0 0.3])
+
+%% plot 
+groupParent = findgroups(Screening.Parent);
+figure()
+hold on
+map = lines();
+for i = 1:max(grouping(:))
+    idx = find(grouping == i);
+    parentC = groupParent(idx(1));
+    s(i) = scatter3(Screening.GRratioMean_TwoPhoton(idx),...
+        Screening.dFF0_shortStim_TwoPhoton(idx),...
+        Screening.DI_short_TwoPhoton(idx),...
+        [],map(parentC,:),'filled','MarkerFaceAlpha',0.5);
+    s(i).Tag = groupnames(i);
+    if ~isempty(find(controls == groupnames(i)))
+        s(i).Marker = 'p';
+        s(i).MarkerFaceColor = 'flat';
+        s(i).MarkerFaceAlpha = 1;
+        s(i).SizeData = 100;
+    end
+end
+axis([0 3 -0.35 0.05 0 0.3])
+legend(s,groupnames)
+box on

@@ -21,19 +21,9 @@ for i = 1:length(WellconstructName)
     Namesplt2 = split(Namesplt(1),'-cyOFP');
     T_well.Name(i) = string(Namesplt2(1));
 end
-% Standardize Names
-idx = strmatch('JEDI1P',T_well.Name,'exact');
-nameCol = strmatch('Name',T_well.Properties.VariableNames,'exact');
-T_well(idx,nameCol) = repmat({'JEDI-1P'},length(idx),1);
-idx = strmatch('Borgwoori-R3',T_well.Name,'exact');
-nameCol = strmatch('Name',T_well.Properties.VariableNames,'exact');
-T_well(idx,nameCol) = repmat({'Bongwoori-R3'},length(idx),1);
-idx = strmatch('Borgwoori-Pos6',T_well.Name,'exact');
-nameCol = strmatch('Name',T_well.Properties.VariableNames,'exact');
-T_well(idx,nameCol) = repmat({'Bongwoori-Pos6'},length(idx),1);
-idx = strmatch('ASAP2',T_well.Name,'exact');
-nameCol = strmatch('Name',T_well.Properties.VariableNames,'exact');
-T_well(idx,nameCol) = repmat({'ASAP2s'},length(idx),1);
+for i = 1:height(T_well)
+    T_well.Name(i) = libplot.fzmatch(T_well.Name{i});
+end
 
 %% Well level stats (optional)
 T_well.stim_shortmean = mean(T_well{:, {'Stim_1', 'Stim_2' ,'Stim_3','Stim_4'}}, 2); 
@@ -46,6 +36,7 @@ T_well = fillmissing(T_well,'constant',0,'DataVariables',@isnumeric);
 % replace missing values (nan) with 0
 T_well_stats = libplot.groupWells(T_well);
 T_well_stats = sortrows(T_well_stats,'Name','ascend');
+T_well_stats.Properties.RowNames = T_well_stats.Name;
 save(fullfile(savepath,strcat(saveName,'_T_well_stats.mat')),'T_well_stats');
 
 %% Trace (Figure 0)

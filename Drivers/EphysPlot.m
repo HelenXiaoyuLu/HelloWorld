@@ -46,7 +46,7 @@ legend(Transition_curve.Name,'location','best')
 xlabel('Command Voltage (mV)')
 ylabel({'Steady-state response','\DeltaF/F0'})
 title('Ephys 3-test Voltage Clamp')
-save('D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\BenchmarkingPlots\ThreeTest_Transition_curve.mat','Transition_curve');
+% save('D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\BenchmarkingPlots\ThreeTest_Transition_curve.mat','Transition_curve');
 % h = get(gca,'Children')
 % h(1).delete()
 

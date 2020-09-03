@@ -1,13 +1,6 @@
 %% Getting responding map
 clear
-%dirp = 'D:\OneDrive - rice.edu\Francois\Platfrom\SingleCell\20200304 Fstim single cell mock co transfection\Fstim 1000Hz\Sel2\20200304_115900_387_NDExp_Well0000_Point0000_Seq0001.nd2';
-dirp = 'D:\OneDrive - rice.edu\Francois\Platfrom\SingleCell\SC-X2-ASAP2s-60pct-2-1-3\X2_ASAP2s_60pct_2_1-3_trace.nd2';
-% FastAnalysis2P perform fast analysis of field stimulation 2P
-    % recordings. 
-    % 
-    % Zhuohe Liu, St-Pierre Lab, Jan. 2020
-    % harry.liu@rice.edu
-path = dirp;
+path = 'D:\OneDrive - rice.edu\Francois\Platfrom\SingleCell\SC-X2-ASAP2s-60pct-2-1-3\X2_ASAP2s_60pct_2_1-3_trace.nd2';
 figshow = false;
 detrendOrder = 2;
 ch = 1;
@@ -16,9 +9,9 @@ denoise = false;
     
     [~, fName] = fileparts(path);
     reader = bfGetReader(path);
-    I = nd2.read(reader, 'ch', ch, 't', 0);
-    t = nd2.getTimePoints(reader, 't', 0, 'dimOrder', 'TCSZ');
-    nd2info = nd2.getOptics(reader);
+    I = io.nd2.read(reader, 'ch', ch, 't', 0);
+    t = io.nd2.getTimePoints(reader, 't', 0, 'dimOrder', 'TCSZ');
+    nd2info = io.nd2.getOptics(reader);
     reader.close();
     SATVAR = nd2info.satValue;
     I = squeeze(I);
@@ -113,7 +106,7 @@ denoise = false;
         waitfor(hs);
         exit;
     end
-[FILEPATH,NAME,EXT] = fileparts(dirp);
+[FILEPATH,NAME,EXT] = fileparts(path);
 % save(strcat(FILEPATH,NAME,'rMap'))
 
 %%
