@@ -16,7 +16,7 @@ T_well_benchmarking = j.T_out.T_well;
 T_fov_benchmarking = j.T_out.T_fov;
 CtrlFP = 'cyOFP';
 
-% Load library screening result
+%% Load library screening result
 files = dir(strcat(dirp,'\2pFstim*.mat'));
 T_screening_2pFstim = table();
 % for each screening plate
@@ -44,7 +44,7 @@ for i=1:length(files)
     T_well.("Detectability Index Long Stim") =  abs(T_well.("dFF0 Long Stim").*sqrt(T_well.GRRatioMean));
     plateid = str2double(numplate{end});
     if isnan(plateid)
-        numplate = split(files(i).name,{'P     late','.mat'});
+        numplate = split(files(i).name,{'Plate','.mat'});
         plateid = str2double(numplate{end-1});
     end
     T_well.PlateID(:) = repmat(plateid,nwell,1);
@@ -133,6 +133,7 @@ end
 
 %% Plot evolutionary path from benchmarking
 % clearvars e l 
+
 sel = ["ASAP1","ASAP2s","ASAP2s-H152E","ASAP2s-T207H","JEDI-1P","JEDI-2P"];
 f = figure();
 t = tiledlayout(f, 'flow', 'Padding', 'none');
@@ -143,7 +144,7 @@ pp1std = "Detectability Index Short Stim STD";
 pp2 = "PhotostabilityWellMean";
 pp2std = "PhotostabilityWellStd";
 norm2ctrl = "ASAP1";
-DIAUC = [1, 2, 4];
+DIAUC = [1, 3, 5];
 % AUCoperation = "DI*$$\sqrt{AUC}$$=";
 AUCoperation = "DI*AUC=";
 startnodes = [1,2,2,3,3,4];
@@ -189,7 +190,7 @@ axis square
 axis(ax, [0 5 0 2]);
 legend(e,sel,'location','eastoutside')
 
-%% Scatter libraries & pull evolution path from benchmarking
+%% Scatter libraries & pull evolution path from *benchmarking*
 clearvars e l s
 sel = ["ASAP1","ASAP2s","ASAP2s-H152E","ASAP2s-T207H","JEDI-1P","JEDI-2P"];
 f = figure();
@@ -212,10 +213,11 @@ for i = 1:length(selLib)
     s(i) = scatter(ax, xlibval, ylibval,'filled','MarkerFaceAlpha',0.5);
     s(i).CData = c(i+1,:);
     s(i).DataTipTemplate.DataTipRows(1) = dataTipTextRow('Parent',cellstr(T_screening.Parent(libidx)));
-    s(i).DataTipTemplate.DataTipRows(2) = dataTipTextRow('Library Name',cellstr(T_screening.Library(libidx)));
-    s(i).DataTipTemplate.DataTipRows(3) = dataTipTextRow('Well',cellstr(T_screening.wellName(libidx)));
-    s(i).DataTipTemplate.DataTipRows(4) = dataTipTextRow('dF/F0 Short',T_screening.("dFF0 Short Stim")(libidx));
-    s(i).DataTipTemplate.DataTipRows(5) = dataTipTextRow('Sequence',T_screening.Sequence(libidx));
+    s(i).DataTipTemplate.DataTipRows(2) = dataTipTextRow('Construct Name',cellstr(T_screening.ConstructName(libidx)));
+    s(i).DataTipTemplate.DataTipRows(3) = dataTipTextRow('dF/F0 Short Stim',T_screening.("dFF0 Short Stim")(libidx));
+    s(i).DataTipTemplate.DataTipRows(4) = dataTipTextRow('G/R',T_screening.("GRRatioMean")(libidx));
+    s(i).DataTipTemplate.DataTipRows(5) = dataTipTextRow('Photostability (AUC)',T_screening.("Photostability")(libidx));
+    s(i).DataTipTemplate.DataTipRows(6) = dataTipTextRow('Sequence',T_screening.Sequence(libidx));
 end
 
 % Pull data for evolutaionary path
@@ -224,7 +226,7 @@ pp1std = "Detectability Index Short Stim STD";
 pp2 = "PhotostabilityWellMean";
 pp2std = "PhotostabilityWellStd";
 norm2ctrl = "ASAP1";
-DIAUC = [1, 2, 4, 8, 16];
+DIAUC = [1, 3, 5];
 % AUCoperation = "DI*$$\sqrt{AUC}$$=";
 AUCoperation = "DI*AUC=";
 startnodes = [1,2,2,3,3,4];
@@ -240,7 +242,7 @@ for i = 1:numel(sel)
     yval(i) = T_group_benchmarking.(pp2)(sel(i))./T_group_benchmarking.(pp2)(norm2ctrl);
     ystd(i) = T_group_benchmarking.(pp2std)(sel(i))./T_group_benchmarking.(pp2)(norm2ctrl);
     e(i) = errorbar(ax,xval(i),yval(i),ystd(i),...
-        ystd(i),xstd(i),xstd(i),'.','MarkerSize',40,'color',c(i,:));
+        ystd(i),xstd(i),xstd(i),'.','MarkerSize',30,'color',c(i,:));
 end
 % Plot countour line
 for i = 1:numel(DIAUC)
@@ -257,11 +259,11 @@ yevol = yval(endnodes)-yval(startnodes);
 quiver(ax,xval(startnodes)+0.2*xevol,yval(startnodes)+0.2*yevol,...
     xevol,yevol,'r','MaxHeadSize',0.1,...
     'AutoScaleFactor',0.9)
-for i = 1:length(startnodes)
-    text(ax, mean([xval(startnodes(i)),xval(endnodes(i))]),...
-        mean([yval(startnodes(i)),yval(endnodes(i))]),note(i),...
-        'HorizontalAlignment','center','VerticalAlignment','middle');
-end
+% for i = 1:length(startnodes)
+%     text(ax, mean([xval(startnodes(i)),xval(endnodes(i))]),...
+%         mean([yval(startnodes(i)),yval(endnodes(i))]),note(i),...
+%         'HorizontalAlignment','center','VerticalAlignment','middle');
+% end
 
 xlabel(ax,{pp1,strcat("Normalized to ",norm2ctrl)})
 ylabel(ax,{pp2,strcat("Normalized to ",norm2ctrl)})
@@ -361,63 +363,133 @@ legend(ax,[s,l],[splitapply(@unique,T_onboardctrl.Sequence,groupbyctrl);...
     splitapply(@unique,T_onboardctrl.PlateID,groupbyplate)],...
     'location','eastoutside');
 
-%% Scatter libraries & pull evolution path from library screening 
-% Pull controls on evolutionary path to a table
+%% pull evolution path from library screening 
+ref = "ASAP2s-T207H";
+refOrigin = "ASAP1";
 T_ctrlinlib = T_screening(find(T_screening.IsOnEvolPath),:);
 T_ctrlinlib(find(T_ctrlinlib.("dFF0 Short Stim")>-0.03),:) = [];
-
-% T_ctrlinlib = T_onboardctrl;
+pp1lib = "Detectability Index Short Stim";
+pp2lib = "Photostability";
+for i = 1:numel(L)
+    idx = find(T_ctrlinlib.PlateID==i);
+    refidx = intersect(find(T_ctrlinlib.Sequence==ref),idx);
+    if ~isempty(refidx)
+        T_ctrlinlib.(strcat("Normalized ",pp1lib))(idx) = T_ctrlinlib.(pp1lib)(idx)./T_ctrlinlib.(pp1lib)(refidx);
+        T_ctrlinlib.(strcat("Normalized ",pp2lib))(idx) = T_ctrlinlib.(pp2lib)(idx)./T_ctrlinlib.(pp2lib)(refidx);
+    elseif any(idx)
+%         if i-1 > 0
+%             samedayrefidx = intersect(find(T_onboardctrl.Sequence==ref),find(T_onboardctrl.PlateID==i-1));
+%         else
+            samedayrefidx = intersect(find(T_ctrlinlib.Sequence==ref),find(T_ctrlinlib.PlateID==i+1));
+%         end
+        T_ctrlinlib.(strcat("Normalized ",pp1lib))(idx) = T_ctrlinlib.(pp1lib)(idx)./T_ctrlinlib.(pp1lib)(samedayrefidx);
+        T_ctrlinlib.(strcat("Normalized ",pp2lib))(idx) = T_ctrlinlib.(pp2lib)(idx)./T_ctrlinlib.(pp2lib)(samedayrefidx);       
+    end
+end
 selpp = {'Area_T_well', 'GMean', 'RMean', 'GRRatioMean',...
     'dFF0 Short Stim', 'dFF0 Long Stim', 'Photostability',...
-    'Detectability Index Short Stim','Detectability Index Long Stim', 'Sequence'};
+    'Detectability Index Short Stim','Detectability Index Long Stim', ...
+    strcat("Normalized ",pp1lib),'Normalized Photostability','Sequence'};
 T_ctrlinlib_groupall = libplot.groupWells(T_ctrlinlib,'groupOn','Sequence',...
     'selectProperties',selpp);
 T_ctrlinlib_groupall.Properties.RowNames = T_ctrlinlib_groupall.Sequence;
 selectedctrls = find(T_ctrlinlib_groupall.n_well>1);
 T_ctrlinlib_group = T_ctrlinlib_groupall(selectedctrls,:);
 
-% Plot evol path
 f = figure();
 clearvars e l s
 t = tiledlayout(f, 'flow', 'Padding', 'none');
 ax = nexttile(t);
 hold(ax, 'on');
+
+% Method 1: normalized to ASAP2s-T207H
+pp1 = "Normalized Detectability Index Short Stim_Mean";
+pp1std = "Normalized Detectability Index Short Stim_STD";
+pp2 = "Normalized Photostability_Mean";
+pp2std = "Normalized Photostability_STD";
+norm2ctrl = "ASAP1";
+% AUCoperation = "DI*$$\sqrt{AUC}$$=";
+AUCoperation = "DI*AUC=";
+nxval = zeros(1,numel(sel));
+nxstd = zeros(1,numel(sel));
+nyval = zeros(1,numel(sel));
+nystd = zeros(1,numel(sel));
+nevol = height(T_ctrlinlib_group);
+for i = 1:nevol 
+    nxval(i) = T_ctrlinlib_group.(pp1)(i)./T_ctrlinlib_group.(pp1)(norm2ctrl);
+    nxstd(i) = T_ctrlinlib_group.(pp1std)(i)./T_ctrlinlib_group.(pp1)(norm2ctrl);
+    nyval(i) = T_ctrlinlib_group.(pp2)(i)./T_ctrlinlib_group.(pp2)(norm2ctrl);
+    nystd(i) = T_ctrlinlib_group.(pp2std)(i)./T_ctrlinlib_group.(pp2)(norm2ctrl);
+    e(i) = errorbar(ax,nxval(i),nyval(i),nystd(i),...
+        nystd(i),nxstd(i),nxstd(i),'.','MarkerSize',20);
+end
+%
+% Method 2: non-normalized
+f2 = figure();
+t2 = tiledlayout(f2, 'flow', 'Padding', 'none');
+ax2 = nexttile(t2);
+hold(ax2, 'on');
 pp1 = "Detectability Index Short Stim_Mean";
 pp1std = "Detectability Index Short Stim_STD";
 pp2 = "Photostability_Mean";
 pp2std = "Photostability_STD";
-norm2ctrl = "ASAP1";
-DIAUC = [1, 2, 4, 8, 16];
 % AUCoperation = "DI*$$\sqrt{AUC}$$=";
-AUCoperation = "DI*AUC=";
-xval = zeros(1,numel(sel));
-xstd = zeros(1,numel(sel));
-yval = zeros(1,numel(sel));
-ystd = zeros(1,numel(sel));
-nevol = height(T_ctrlinlib_group);
+nnxval = zeros(1,numel(sel));
+nnxstd = zeros(1,numel(sel));
+nnyval = zeros(1,numel(sel));
+nnystd = zeros(1,numel(sel));
+nnnevol = height(T_ctrlinlib_group);
 for i = 1:nevol 
-    xval(i) = T_ctrlinlib_group.(pp1)(i)./T_ctrlinlib_group.(pp1)(norm2ctrl);
-    xstd(i) = T_ctrlinlib_group.(pp1std)(i)./T_ctrlinlib_group.(pp1)(norm2ctrl);
-    yval(i) = T_ctrlinlib_group.(pp2)(i)./T_ctrlinlib_group.(pp2)(norm2ctrl);
-    ystd(i) = T_ctrlinlib_group.(pp2std)(i)./T_ctrlinlib_group.(pp2)(norm2ctrl);
-    e(i) = errorbar(ax,xval(i),yval(i),ystd(i),...
-        ystd(i),xstd(i),xstd(i),'.','MarkerSize',20);
+    nnxval(i) = T_ctrlinlib_group.(pp1)(i)./T_ctrlinlib_group.(pp1)(norm2ctrl);
+    nnxstd(i) = T_ctrlinlib_group.(pp1std)(i)./T_ctrlinlib_group.(pp1)(norm2ctrl);
+    nnyval(i) = T_ctrlinlib_group.(pp2)(i)./T_ctrlinlib_group.(pp2)(norm2ctrl);
+    nnystd(i) = T_ctrlinlib_group.(pp2std)(i)./T_ctrlinlib_group.(pp2)(norm2ctrl);
+    e2(i) = errorbar(ax2,nnxval(i),nnyval(i),nnystd(i),...
+        nnystd(i),nnxstd(i),nnxstd(i),'.','MarkerSize',20);
 end
 
 % Plot countour line
 for i = 1:numel(DIAUC)
-    x = min(xval)-0.5:0.1:max(xval+2.5);
+    x = min(xval)-0.5:0.1:max(xval+1);
     y = (DIAUC(i)./x).^1;
     l(i) = plot(ax,x,y,'--k');
     text(ax,x(end),y(end),strcat(AUCoperation,num2str(DIAUC(i))),...
         'Interpreter','latex');
+    l2(i) = plot(ax2,x,y,'--k');
+    text(ax2,x(end),y(end),strcat(AUCoperation,num2str(DIAUC(i))),...
+        'Interpreter','latex');
 end
+xlabel(ax,{pp1,strcat("Normalized to ",norm2ctrl)})
+ylabel(ax,{pp2,strcat("Normalized to ",norm2ctrl)})
+axis square               
+axis(ax, [0 8 0 2]);
+title(ax,{'Evolution path pulled from libraries'; ...
+    strcat("normalized to ",ref, " for plate-to-plate variation")})
+legend(e,T_ctrlinlib_group.Sequence,'location','eastoutside')
 
-%% Scatter library screening by parent
-selLib = ["ASAP2s","ASAP2s-T207H","ASAP2s-H152E","ASAP2s-H152E-T207H","ASAP2s-H152E-Q397H"];
+xlabel(ax2,{pp1,strcat("Normalized to ",norm2ctrl)})
+ylabel(ax2,{pp2,strcat("Normalized to ",norm2ctrl)})
+axis square               
+axis(ax2, [0 7 0 2]);
+title(ax2,{'Evolution path pulled from libraries'; ...
+    'Unnormalized for plate-to-plate variation'})
+legend(e2,T_ctrlinlib_group.Sequence,'location','eastoutside')
+
+%% Scatter libraries & pull evolution path from library screening *unnormalized*
+% Plot evol path
+f = figure();
+c = lines;
+clearvars e l s
+t = tiledlayout(f, 'flow', 'Padding', 'none');
+ax = nexttile(t);
+hold(ax, 'on');
+
+% Scatter library screening by parent
+refOrigin = "ASAP1";
+selLib = ["ASAP2s","ASAP2s-H152E","ASAP2s-T207H","ASAP2s-H152E-T207H","ASAP2s-H152E-Q397H"];
 pp1lib = "Detectability Index Short Stim";
 pp2lib = "Photostability";
-ctrlidx = strcmp(T_screening.Parent,"ASAP1");
+ctrlidx = strcmp(T_screening.Parent,refOrigin);
 for i = 1:length(selLib)
     libidx = strcmp(T_screening.Parent,selLib(i));
 %     xlibval = T_screening.(pp1lib)(libidx)./T_group.(pp1)(norm2ctrl);
@@ -425,11 +497,34 @@ for i = 1:length(selLib)
     xlibval = T_screening.(pp1lib)(libidx)./nanmean(T_screening.(pp1lib)(ctrlidx));
     ylibval = T_screening.(pp2lib)(libidx)./nanmean(T_screening.(pp2lib)(ctrlidx));   
     s(i) = scatter(ax, xlibval, ylibval,'filled','MarkerFaceAlpha',0.5);
+    s(i).CData = c(i+1,:);
     s(i).DataTipTemplate.DataTipRows(1) = dataTipTextRow('Parent',cellstr(T_screening.Parent(libidx)));
-    s(i).DataTipTemplate.DataTipRows(2) = dataTipTextRow('Library Name',cellstr(T_screening.Library(libidx)));
-    s(i).DataTipTemplate.DataTipRows(3) = dataTipTextRow('Well',cellstr(T_screening.wellName(libidx)));
-    s(i).DataTipTemplate.DataTipRows(4) = dataTipTextRow('dFF0 Short Stim',T_screening.("dFF0 Short Stim")(libidx));
-    s(i).DataTipTemplate.DataTipRows(5) = dataTipTextRow('Sequence',T_screening.Sequence(libidx));
+    s(i).DataTipTemplate.DataTipRows(2) = dataTipTextRow('Construct Name',cellstr(T_screening.ConstructName(libidx)));
+    s(i).DataTipTemplate.DataTipRows(3) = dataTipTextRow('dF/F0 Short Stim',T_screening.("dFF0 Short Stim")(libidx));
+    s(i).DataTipTemplate.DataTipRows(4) = dataTipTextRow('G/R',T_screening.("GRRatioMean")(libidx));
+    s(i).DataTipTemplate.DataTipRows(5) = dataTipTextRow('Photostability (AUC)',T_screening.("Photostability")(libidx));
+    s(i).DataTipTemplate.DataTipRows(6) = dataTipTextRow('Sequence',T_screening.Sequence(libidx));
+end
+
+% Plot evolutionary path (from previous section)
+for i = 1:nevol 
+    e(i) = errorbar(ax,nnxval(i),nnyval(i),nnystd(i),...
+        nnystd(i),nnxstd(i),nnxstd(i),'.','MarkerSize',30,'color',c(i,:));
+end
+% Plot evolution path
+nnxevol = nnxval(endnodes)-nnxval(startnodes);
+nnyevol = nnyval(endnodes)-nnyval(startnodes);
+quiver(ax,nnxval(startnodes)+0.2*nnxevol,nnyval(startnodes)+0.2*nnyevol,...
+    nnxevol,nnyevol,'r','MaxHeadSize',0.1,...
+    'AutoScaleFactor',0.98)
+
+% Plot countour line
+for i = 1:numel(DIAUC)
+    x = min(xval)-0.2:0.1:max(xval+2.5);
+    y = (DIAUC(i)./x).^1;
+    l(i) = plot(ax,x,y,'--k');
+    text(ax,x(end),y(end),strcat(AUCoperation,num2str(DIAUC(i))),...
+        'Interpreter','latex');
 end
 
 xlabel(ax,{pp1,strcat("Normalized to ",norm2ctrl)})
@@ -440,87 +535,75 @@ title({'Evolution path pulled from libraries'; ...
     'Unnormalized for plate-to-plate variation'})
 legend([e,s],[sel,selLib],'location','eastoutside')
 
-%% Scatter libraries & pull evolution path from library screening,...
-%  normalize to selected on-board control 
+%% Scatter libraries & pull evolution path from library screening, *normalize* to selected on-board control 
 ref = "ASAP2s-T207H";
 refOrigin = "ASAP1";
 f = figure();
-clearvars l s 
+clearvars e l s
 t = tiledlayout(f, 'flow', 'Padding', 'none');
 ax = nexttile(t);
 hold(ax, 'on');
-pp1lib = "Detectability Index Short Stim_Mean";
-pp1libstd = "Detectability Index Short Stim_STD";
-pp2lib = "TgtAUC_sig_NormaltoRandT_Mean";
-pp2libstd = "TgtAUC_sig_NormaltoRandT_STD";
-norm2ctrl = ref;
-DIAUC = [1 2 4 8];
-% AUCoperation = "DI*$$\sqrt{AUC}$$=";
-AUCoperation = "DI*AUC=";
-xval = zeros(1,numel(sel));
-xstd = zeros(1,numel(sel));
-yval = zeros(1,numel(sel));
-ystd = zeros(1,numel(sel));
-nevol = height(T_ctrlinlib_group);
-xamplify = T_ctrlinlib_group.(pp1lib)(ref)/T_ctrlinlib_group.(pp1lib)(refOrigin);
-yamplify = T_ctrlinlib_group.(pp2lib)(ref)/T_ctrlinlib_group.(pp2lib)(refOrigin);
 
-for i = 1:nevol 
-    
-    xval(i) = T_ctrlinlib_group.(pp1lib)(i)./T_ctrlinlib_group.(pp1lib)(norm2ctrl)*xamplify;
-    xstd(i) = T_ctrlinlib_group.(pp1libstd)(i)./T_ctrlinlib_group.(pp1lib)(norm2ctrl)*xamplify;
-    yval(i) = T_ctrlinlib_group.(pp2lib)(i)./T_ctrlinlib_group.(pp2lib)(norm2ctrl)*yamplify;
-    ystd(i) = T_ctrlinlib_group.(pp2libstd)(i)./T_ctrlinlib_group.(pp2lib)(norm2ctrl)*yamplify;
-    e(i) = errorbar(ax,xval(i),yval(i),ystd(i),...
-        ystd(i),xstd(i),xstd(i),'.','MarkerSize',20);
+pp1lib = "Detectability Index Short Stim";
+pp2lib = "Photostability";
+ 
+% Normalize libraries to on-board control
+for i = 1:numel(L)
+    idx = find(T_screening.PlateID==i);
+    refidx = intersect(find(T_screening.Sequence==ref),idx);
+    if ~isempty(refidx) && T_screening.("dFF0 Short Stim")(refidx)<=-0.03
+        T_screening.(strcat("Normalized ",pp1lib))(idx) = T_screening.(pp1lib)(idx)./T_screening.(pp1lib)(refidx);
+        T_screening.(strcat("Normalized ",pp2lib))(idx) = T_screening.(pp2lib)(idx)./T_screening.(pp2lib)(refidx);
+    elseif any(idx)
+        samedayrefidx = intersect(find(T_screening.Sequence==ref),find(T_screening.PlateID==i+1));
+        T_screening.(strcat("Normalized ",pp1lib))(idx) = T_screening.(pp1lib)(idx)./T_screening.(pp1lib)(samedayrefidx);
+        T_screening.(strcat("Normalized ",pp2lib))(idx) = T_screening.(pp2lib)(idx)./T_screening.(pp2lib)(samedayrefidx);
+    end
 end
 
+% Scatter library screening by parent
+selLib = ["ASAP2s","ASAP2s-H152E","ASAP2s-T207H","ASAP2s-H152E-T207H","ASAP2s-H152E-Q397H"];
+pp1lib = strcat("Normalized ",pp1lib);
+pp2lib = strcat("Normalized ",pp2lib);
+ctrlidx = strcmp(T_screening.Parent,refOrigin);
+for i = 1:length(selLib)
+    libidx = strcmp(T_screening.Parent,selLib(i));
+    xlibval = T_screening.(pp1lib)(libidx)/nanmean(T_screening.(pp1lib)(ctrlidx));
+    ylibval = T_screening.(pp2lib)(libidx)/nanmean(T_screening.(pp2lib)(ctrlidx));   
+    s(i) = scatter(ax, xlibval, ylibval,'filled','MarkerFaceAlpha',0.5);
+    s(i).CData = c(i+1,:);
+    s(i).DataTipTemplate.DataTipRows(1) = dataTipTextRow('Parent',cellstr(T_screening.Parent(libidx)));
+    s(i).DataTipTemplate.DataTipRows(2) = dataTipTextRow('Construct Name',cellstr(T_screening.ConstructName(libidx)));
+    s(i).DataTipTemplate.DataTipRows(3) = dataTipTextRow('dF/F0 Short Stim',T_screening.("dFF0 Short Stim")(libidx));
+    s(i).DataTipTemplate.DataTipRows(4) = dataTipTextRow('G/R',T_screening.("GRRatioMean")(libidx));
+    s(i).DataTipTemplate.DataTipRows(5) = dataTipTextRow('Photostability (AUC)',T_screening.("Photostability")(libidx));
+    s(i).DataTipTemplate.DataTipRows(6) = dataTipTextRow('Sequence',T_screening.Sequence(libidx));
+end
+
+% Plot evolutionary path (from previous section)
+for i = 1:nevol 
+    e(i) = errorbar(ax,nxval(i),nyval(i),nystd(i),...
+        nystd(i),nxstd(i),nxstd(i),'.','MarkerSize',30,'color',c(i,:));
+end
+% Plot evolution path
+nxevol = nxval(endnodes)-nxval(startnodes);
+nyevol = nyval(endnodes)-nyval(startnodes);
+quiver(ax,nxval(startnodes)+0.2*nxevol,nyval(startnodes)+0.2*nyevol,...
+    nxevol,nyevol,'r','MaxHeadSize',0.1,...
+    'AutoScaleFactor',0.98)
 % Plot countour line
 for i = 1:numel(DIAUC)
-    x = max(min(xval)-0.5,0.1):0.1:max(xval+0.5);
+    x = min(xval)-0.2:0.1:max(xval+2.5);
     y = (DIAUC(i)./x).^1;
     l(i) = plot(ax,x,y,'--k');
     text(ax,x(end),y(end),strcat(AUCoperation,num2str(DIAUC(i))),...
         'Interpreter','latex');
 end
 
-pp1lib = "Detectability Index Short Stim";
-pp2lib = "TgtAUC_sig_NormaltoRandT";
- 
-% scatter libraries (normalized)
-for i = 1:numel(L)
-    idx = find(T_screening.Plate==i);
-    refidx = intersect(find(T_screening.Sequence==ref),idx);
-    if ~isempty(refidx)
-        T_screening.(strcat("Normalized ",pp1lib))(idx) = T_screening.(pp1lib)(idx)./T_screening.(pp1lib)(refidx)*xamplify;
-        T_screening.(strcat("Normalized ",pp2lib))(idx) = T_screening.(pp2lib)(idx)./T_screening.(pp2lib)(refidx)*yamplify;
-    elseif any(idx)
-        samedayrefidx = intersect(find(T_screening.Sequence==ref),find(T_screening.Plate==i-1));
-        T_screening.(strcat("Normalized ",pp1lib))(idx) = T_screening.(pp1lib)(idx)./T_screening.(pp1lib)(samedayrefidx)*xamplify;
-        T_screening.(strcat("Normalized ",pp2lib))(idx) = T_screening.(pp2lib)(idx)./T_screening.(pp2lib)(samedayrefidx)*yamplify;
-    end
-end
-
-% Scatter library screening by parent
-selLib = ["ASAP2s","ASAP2s-T207H","ASAP2s-H152E","ASAP2s-H152E-T207H","ASAP2s-H152E-Q397H"];
-pp1lib = strcat("Normalized ",pp1lib);
-pp2lib = strcat("Normalized ",pp2lib);
-for i = 1:length(selLib)
-    libidx = strcmp(T_screening.Parent,selLib(i));
-    xlibval = T_screening.(pp1lib)(libidx);
-    ylibval = T_screening.(pp2lib)(libidx);   
-    s(i) = scatter(ax, xlibval, ylibval,'filled','MarkerFaceAlpha',0.5);
-    s(i).DataTipTemplate.DataTipRows(1) = dataTipTextRow('Parent',cellstr(T_screening.Parent(libidx)));
-    s(i).DataTipTemplate.DataTipRows(2) = dataTipTextRow('Library Name',cellstr(T_screening.Library(libidx)));
-    s(i).DataTipTemplate.DataTipRows(3) = dataTipTextRow('Well',cellstr(T_screening.wellName(libidx)));
-    s(i).DataTipTemplate.DataTipRows(4) = dataTipTextRow('dF/F0 Short',T_screening.dFF0_shortStim(libidx));
-    s(i).DataTipTemplate.DataTipRows(5) = dataTipTextRow('Sequence',T_screening.Sequence(libidx));
-end
-
 xlabel(ax,{pp1,strcat("Normalized to ",norm2ctrl)})
 ylabel(ax,{pp2,strcat("Normalized to ",norm2ctrl)})
 axis square               
-axis(ax, [0 8 0 5]);
+axis(ax, [0 9 0 2]);
 title({'Evolution path pulled from libraries'; ...
     'Normalized for plate-to-plate variation'})
 legend([e,s],[sel,selLib],'location','eastoutside')
@@ -555,3 +638,5 @@ function pname = findevol(T_lookup,welllist)
         end    
     end
 end
+
+function plotevolpath(T_plot,pp1,pp2,pp1std,pp2std,norm2ctrl,startnodes,endnodes,note
