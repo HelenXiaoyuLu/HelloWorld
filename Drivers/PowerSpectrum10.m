@@ -8,12 +8,14 @@ PowerReads = zeros(length(WaveLengths),11);
 WaveLengths20 = 700:20:1080;
 %%
 clc
-[~,data] = xlsread("D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200305 SpectraFinal\Power Config\20200305_manual_700-840nm.csv");
-% wavelength = strsplit(data{4,:},';');
-% wavelength = str2num(wavelength{2});
-datavalue = string(data(8:end-20));
-value = split(datavalue,';');
-value_num = double(value(:,3))*10^3;
+dirp = 'D:\OneDrive - Rice University\Francois\Paper\Data\Power measurements\PowerSpectrum\20200904 Spectra power ramp\20200904_*_100mwrange_PFSoff.csv';
+flist = dir(dirp);
+T_data = table();
+for i = 1:length(flist)
+    T_partial = readtable(fullfile(flist(i).folder,flist(i).name));
+    T_data = [T_data; T_partial];
+end
+value_num = T_data.Power_W_.*10^3;
 
 %%
 [~,data2] = xlsread("D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200305 SpectraFinal\Power Config\20200305_manual_850-990nm.csv");
@@ -31,7 +33,6 @@ datavalue3 = string(data3(8:end-20));
 value3 = split(datavalue3,';');
 value_num3 = double(value3(:,3))*10^3;
 
-
 %%
 [~,data4] = xlsread("D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\20200227_test1.csv");
 wavelength4 = strsplit(data4{4,:},';');
@@ -40,10 +41,12 @@ datavalue4 = string(data4(8:end-20));
 %datavalue4 = string(data4(8:102200));
 value4 = split(datavalue4,';');
 value_num4 = double(value4(:,3))*10^3;
+
 %%
 %PowerSpec = cat(1,value_num, value_num2, value_num3);
-PowerSpec = value_num4 ;
+PowerSpec = value_num;
 figure(2)
+clf
 hold on
 plot(1:length(PowerSpec),PowerSpec)
 xlabel("sample#")
@@ -52,15 +55,15 @@ ylabel("Power/mW")
 %% 
 PowerSpecDiff = diff(PowerSpec);
 yDiff = PowerSpec;
-more1 = abs(PowerSpec) > 0.1;
+more1 = abs(PowerSpec) > 0.2;
 yDiff(more1) = 1;
-less1 = abs(PowerSpec) < 0.1;
+less1 = abs(PowerSpec) < 0.2;
 yDiff(less1) = 0;
 yDiffDiff = diff(yDiff);
 yTurnOFF = find(yDiffDiff == -1);
 yTurnON = find(yDiffDiff == 1);
 
-%% 
+%% Get read
 peakvaluest = zeros(1,length(yTurnOFF));
 peakLoc = zeros(1,length(yTurnOFF));
 for i = 1:length(yTurnOFF);
@@ -68,13 +71,17 @@ for i = 1:length(yTurnOFF);
      yDiff(yTurnON(i):yTurnOFF(i)) = yDiff(yTurnON(i):yTurnOFF(i))*peakvaluest(i);
 end
 figure(2)
+hold on
 ylabel("Power/mW")
 plot(yDiff,'LineWidth',2);
-title('Manual')
+title('power spectra')
+
+%% compare method
 figure(3)
+clf
 hold on
-peakvalm = load('peakvaluest_measure.mat').peakvaluest;
-plot(WaveLengths,peakvalm)
+peakvalm = load('D:\OneDrive - Rice University\Francois\Paper\Data\Power measurements\peakvaluest_measure.mat').peakvaluest;
+plot(WaveLengths20,peakvalm)
 plot(WaveLengths,peakvaluest(2:end-1))
 ylabel("Power/mW")
 xlabel("Wavelength/nm")
@@ -82,28 +89,27 @@ title('manual vs jobs')
 legend('Manual','Jobs')
 
 figure(4)
+clf
 hold on
-peakvalm = load('D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200305 SpectraFinal\Power Config\20200305_peakvaluest_jobs_700-10-1080.mat').peakvaluest;
-peakvalt2 = load('D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200305 SpectraFinal\Power Config\20200305_peakvaluest_manual_700-10-1080.mat').peakvaluest;
-peakvalt3 = load('D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\peakvaluest_test1_0227.mat').peakvaluest;
-
-plot(peakvalm(1,:),peakvalm(2,:))
-plot(peakvalt2(1,:),peakvalt2(2,:))
-
-plot(WaveLengths20,peakvalt2(2:end-1))
-plot(WaveLengths20,peakvalt3(2:end-1))
-plot(WaveLengths,peakvalm(2:end-1))
-plot(WaveLengths(1:30),peakvaluest(2:end))
-plot(WaveLengths20,peakvaluest(2:end-1))
+peakval1 = load('D:\OneDrive - Rice University\Francois\Paper\Data\Power measurements\PowerSpectrum\20200305 SpectraFinal\Power Config\20200305_peakvaluest_jobs_700-10-1080.mat').peakvaluest;
+peakval2 = load('D:\OneDrive - Rice University\Francois\Paper\Data\Power measurements\PowerSpectrum\20200305 SpectraFinal\Power Config\20200305_peakvaluest_manual_700-10-1080.mat').peakvaluest;
+peakval3 = load('D:\OneDrive - Rice University\Francois\Paper\Data\Power measurements\PowerSpectrum\20200227 Spectrum\peakvaluest_test1_0227.mat').peakvaluest;
+peakval4 = load('D:\OneDrive - Rice University\Francois\Paper\Data\Power measurements\PowerSpectrum\20200904 Spectra power ramp\20200904_peakvaluest_jobs_10mwrange.mat').peakvaluest;
+plot(peakval1(1,:),peakval1(2,:)) % 0305 jobs
+plot(peakval2(1,:),peakval2(2,:)) % 0305 manual
+plot(WaveLengths20,peakval3(2:end-1)) % 0227 jobs
+plot(peakval4(1,:),peakval4(2,:)) % 0904 jobs 10mw
+plot(WaveLengths,peakvaluest(2:end-1)) % 0904 jobs
 
 ylabel("Power/mW")
 xlabel("Wavelength/nm")
 title('manual vs jobs')
-legend('0305Manual','0215jobs','0215Manual','0227Jobs','0305Jobs','0305Jobs-2','0305Jobs-2 (100mW)','0305Jobs-4 (100mW)')
-legend('Manual','JOBs','location','best')
-peakvaluest = [700:20:1080; peakvaluest(2:end-1) ]
+legend('0305 jobs','0305 manual','0227 jobs','0904 jobs 10mw','0904 jobs 100mw')
 axis([700 1080 9 15 ])
-save('D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\20200305_peakvaluest_jobs_1.mat','peakvaluest')
+
+%% legend('Manual','JOBs','location','best')
+peakvaluest = [WaveLengths; peakvaluest(2:end-1)];
+save(fullfile(flist(1).folder,'20200904_peakvaluest_jobs_100mwrange.mat'),'peakvaluest')
 %%
 [~,data900] = xlsread("20200123 PowerScan 900nm125 126 135 128 125 126.csv");
 datavalue900 = string(data900(8:end-20));
