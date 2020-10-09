@@ -3,14 +3,19 @@ clear
 import ysp.*
 import spcore.*
 
+    cfg.default = db.jobConfig(...
+        'path', 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\20200904 ramping power', ...
+        'tgtCh\path', 'Power ramping 920nm', ...
+        'lookup', '*.xlsx');
 %% Rename Files 2P
-lib = ysp.libData('0129Rename');
-Lookup = readcell('D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200128 Spectra\20200128Lookup_spectrum','FileType','spreadsheet');
+lib = libData('0129Rename');
+Lookup = readcell('','FileType','spreadsheet');
 Jobs = 'HV20 Merge - Copy';
 fNames = '\20200128_195856_004_NDExp_*.nd2';
 Parent = 'D:\OneDrive - rice.edu\Francois\Paper\Data\Power measurements\PowerSpectrum\20200128 Spectra\';
-jobDir = strcat(Parent,Jobs,fNames);
-lib.loadSet('path',jobDir);
+lib.loadFrame(...
+    'path',strcat(Jobs,...
+    );
 wells = cell(3,length(lib.getChildren('w')));
 
 for i = 1:length(lib.getChildren('w'))

@@ -51,7 +51,7 @@ trdSat(ImgsDir,1,maxVal,refImg,false)
 
 %% Draw mask using ui.cellSel
 % dirp = strcat(Parent, subJobs);
-dirp = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Fstim\20200126 Benchmarking\plate2';
+dirp = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\20200918 Power ramping during warm up';
 flist = dir(strcat(dirp,'\ExSat\*.tiff'));
 mkdir(strcat(dirp,'\maskTiff'));
 mkdir(strcat(dirp,'\maskMat'));

@@ -25,8 +25,8 @@ end
 % ui ROI select
 clear
 % load established mat file
-dirp = 'D:\OneDrive - rice.edu\Francois\RedGEVIs\Wet\Results\20200628 photoactivation\exp50ms';
-flist = dir(strcat(dirp,'\Tiff\*.tiff'));
+dirp = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\20200918 Power ramping during warm up';
+flist = dir(strcat(dirp,'\maskTiff\*.tiff'));
 tifflist = dir(strcat(dirp,'\maskMat\*.mat'));
 mkdir(strcat(dirp,'\newmaskTiff'));
 mkdir(strcat(dirp,'\newmaskMat'));
