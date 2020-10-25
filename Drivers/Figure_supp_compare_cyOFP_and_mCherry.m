@@ -3,6 +3,7 @@
 %   See related documentations:
 %   https://francoispedia.atlassian.net/wiki/spaces/XL/pages/1592426606/
 %   20200814+Side-by-side+benchmarking+GEVI+-mCherry+and+-cyOFP+on+one+plate
+%   For local
 
 %% Load jobs 
 % jobids = [20200831224945, ...  % Reference channel = 1 (green)
@@ -73,8 +74,8 @@ T_plot_mCherry("ASAP2s-H152E-Q397H",:) = [];
 %% Figure 1: compare dF/F0
 ppmean = "-dF/F0 Short Mean";
 ppstd = "-dF/F0 Short STD";
-T_plot_mCherry = sortrows(T_plot_mCherry, ppmean, 'ascend');
-T_plot_cyOFP = T_plot_cyOFP(T_plot_mCherry.GEVI,:);
+T_plot_cyOFP = sortrows(T_plot_cyOFP, ppmean, 'ascend');
+T_plot_mCherry = T_plot_mCherry(T_plot_cyOFP.GEVI,:);
 x = T_plot_mCherry.(ppmean);
 y = T_plot_cyOFP.(ppmean);
 xstd = T_plot_mCherry.(ppstd);
@@ -348,6 +349,9 @@ ax.XAxis.Label.String =  ppmean + " from field stimulation";
 ax.YAxis.Label.String =  ppmean + " from continuous photobleaching";
 legend(ax, s, 'Location', 'eastoutside');
 
+%% Figure 8-9 Local only
+
+    
 %% Functions
 function [gevi, refFP] = parsename(name)
     if contains(name,"-cyOFP") > contains(name,"-mCherry-CAAX")
