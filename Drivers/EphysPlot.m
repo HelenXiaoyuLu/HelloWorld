@@ -73,9 +73,10 @@ Single_AP = struct2table(Single_AP_raw);
 % save('D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\BenchmarkingPlots\ThreeTest_Single_AP.mat','Single_AP');
 
 %% Single Artificial Action Potential Plot(Figure 2-3)
+sel = ["ASAP2s", "ASAP3", "JEDI-1P"];
 figure(2) % Show average trace from all
 clf
-for i = 1:size(Single_AP,1)
+for i = 1:height(Single_AP)
     subplot(2,6,i)
     hold on
     trace_t = cell2mat(Single_AP(i,7).Variables);
@@ -97,24 +98,24 @@ subplot(2,1,2)
 hold on
 ColorStore = [0.00,0.45,0.74;0.85,0.33,0.10;0.93,0.69,0.13];
 for i = 1:3
-    trace_t = cell2mat(Single_AP(i,7).Variables);
-    trace_mean = 1-cell2mat(Single_AP(i,3).Variables);
-    trace_std = cell2mat(Single_AP(i,4).Variables);
+    trace_t = cell2mat(Single_AP.Time(sel(i)));
+    trace_mean = 1-cell2mat(Single_AP.TraceMean(sel(i)));
+    trace_std = cell2mat(Single_AP.TraceStd(sel(i)));
     Shade = [trace_mean+trace_std, fliplr(trace_mean-trace_std)];
     h = fill([trace_t, fliplr(trace_t)],Shade,ColorStore(i,:),'LineStyle','none','FaceAlpha','0.2');
     set(get(get(h(1),'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-    h(i)= plot(trace_t, trace_mean,'Color',ColorStore(i,:),'LineWidth',1)
+    h(i) = plot(trace_t, trace_mean,'Color',ColorStore(i,:),'LineWidth',1)
 end
-axis([-0.05 0.05 -0.05 0.3])
+axis([-0.05 0.05 -0.05 0.4])
 axis square
 xlabel('Time (s)')
 ylabel('Normalized Fluorescence')
-legend('ASAP2s','ASAP3','JEDI-2P','location','best')
+legend(sel,'location','best')
 %uistack(h(2),'top')
 %uistack(h(1),'top')
 
 subplot(2,1,1)
-load('D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\Ephys\AP_4msFWHM_100mV_10kHz_TRIMMED.mat');
+load('D:\OneDrive - Rice University\Francois\Paper\JEDI-2P\Figures\Ephys\AP_4msFWHM_100mV_10kHz_TRIMMED.mat');
 T_exd = [0:0.01:0.05];
 Baseline_exd = c002_IN_0(1)*ones(size(T_exd));
 T_full_singleAP = [T_exd, T_exd(end)+c001_Time];
@@ -191,24 +192,24 @@ subplot(2,1,2)
 hold on
 ColorStore = [0.00,0.45,0.74;0.85,0.33,0.10;0.93,0.69,0.13];
 for i = 1:3
-    trace_t = cell2mat(Train_AP(i,7).Variables);
-    trace_mean = 1-cell2mat(Train_AP(i,3).Variables);
-    trace_std = cell2mat(Train_AP(i,4).Variables);
+    trace_t = cell2mat(Train_AP.Time(sel(i)));
+    trace_mean = 1-cell2mat(Train_AP.TraceMean(sel(i)));
+    trace_std = cell2mat(Train_AP.TraceStd(sel(i)));
     Shade = [trace_mean+trace_std, fliplr(trace_mean-trace_std)];
     h1 = fill([trace_t, fliplr(trace_t)],Shade,ColorStore(i,:),'LineStyle','none','FaceAlpha','0.2');
     set(get(get(h1(1),'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
     h(i) = plot(trace_t, trace_mean,'Color',ColorStore(i,:),'LineWidth',1)   
 end
-axis([-0.05 0.15 -0.05 0.3])
+axis([-0.05 0.15 -0.05 0.4])
 axis square
 xlabel('Time (s)')
 ylabel('Normalized Fluorescence')
-legend('ASAP2s','ASAP3','JEDI-2P','location','best')
+legend(sel,'location','best')
 uistack(h(2),'top')
 uistack(h(1),'top')
 
 subplot(2,1,1)
- load('D:\OneDrive - rice.edu\Francois\Paper\JEDI-2P\Figures\Ephys\AP_4msFWHM_100mV_10kHz_TRIMMED.mat');
+ load('D:\OneDrive - Rice University\Francois\Paper\JEDI-2P\Figures\Ephys\AP_4msFWHM_100mV_10kHz_TRIMMED.mat');
  T_exd = [0:0.01:0.05];
  Baseline_exd = c002_IN_0(1)*ones(size(T_exd));
 T_full_trainAP = T_exd;

@@ -1,13 +1,13 @@
 clear
 clc
-j.output = load('D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Fstim\20201008 double blind\Pipeline output\1pFstim 20201008 20201009191612 (P2)');
+j.output = load('D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Fstim\Compare Benchmakring\corrFilt_ver2\2PFieldStimCorrFilt 20201008 20201101005147 (P2)');
 j.output.input = '\\stpierrelab7910\E\Image\Xiaoyu\20201008 Double blind 3 group\Plate 2 double blind 3 group';
 % Wellbase_2PFieldStim.Scatter_rand2dwell(j)
 
 %% 2pFstim 
 [~, T_plot_well] = Wellbase_2PFieldStim.Scatter_rand2dwell(j)
-pp1 = "-dF/F0 Short Mean"; % x value
-pp2 = "AUC unnormalized"; % y value
+pp1 = "-dF/F0 Long Mean"; % x value
+pp2 = "Photostability Mean"; % y value
 grouping = findgroups(T_plot_well.Name);
 f = figure('Color', [1, 1, 1]);
 t = tiledlayout(f, 'flow', 'Padding', 'none');

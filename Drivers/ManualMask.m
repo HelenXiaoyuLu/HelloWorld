@@ -47,14 +47,32 @@ trdSat(ImgsDir,1,maxVal,refImg,false)
 % refImg(refSat) = min(refImg(:));
 % refImg = uint16(refImg-1);
 % trdSatDual(tgtDir,refDir,maxVal,refImg,true)
-% % figure(),histogram(refImg);
+% 
+%% Phase 1 no histmatch
+dirp = "D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Fstim\20201008 double blind\Benchmarking repeat\2pFstim data";
+tgtlist = dir(fullfile(dirp, "\video\*.nd2"));
+reflist = dir(fullfile(dirp, "\image\*.nd2"));
+mkdir(strcat(dirp,'\2p 440hz DualCh ExSat'));
+maxVal = 4095;
+for i = 1:numel(tgtlist)
+    tgtTr = squeeze(io.nd2.read(fullfile(tgtlist(i).folder,tgtlist(i).name),'t',1:20,'ch',1)); 
+    refTr = squeeze(io.nd2.read(fullfile(reflist(i).folder,reflist(i).name),'t',1:20,'ch',1)); 
+    tgtMax = max(tgtTr, [], 3);
+    refMax = max(refTr, [], 3);
+    idxSat = (tgtMax == maxVal) & (refMax == maxVal);
+    tgtMap = mean(tgtTr, 3);
+    tgtMap(idxSat) = 0;
+    tgtdSat16 = uint16(tgtMap-1);
+    fname = strsplit(tgtlist(i).name,'.');
+    imwrite(tgtdSat16,strcat(dirp,'\2p 440hz DualCh ExSat\',fname{1},'.tiff'));
+end
 
 %% Draw mask using ui.cellSel
 % dirp = strcat(Parent, subJobs);
-dirp = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\20200918 Power ramping during warm up';
-flist = dir(strcat(dirp,'\ExSat\*.tiff'));
-mkdir(strcat(dirp,'\maskTiff'));
-mkdir(strcat(dirp,'\maskMat'));
+dirp = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Fstim\20201008 double blind\Benchmarking repeat\2pFstim data';
+flist = dir(strcat(dirp,'\2p 440hz DualCh ExSat\*.tiff'));
+mkdir(strcat(dirp,'\fgmaskTiff'));
+% mkdir(strcat(dirp,'\maskMat'));
 merge = 'label';
 %%
 % ui ROI select
@@ -64,11 +82,11 @@ for k = 1:length(flist)
     disp(strcat('k = ',num2str(k),'; ImgName = ',ImgName));
     [mask, ROIs, ~] = ui.cellSel(I);  
     % Save tiff
-    Savep_tif = strcat(dirp,'\maskTiff\',ImgName,'.tiff');
+    Savep_tif = strcat(dirp,'\fgmaskTiff\',ImgName,'.tiff');
     imwrite(mask,Savep_tif)
-    % Save mat
-    Savep_mat = strcat(dirp,'\maskMat\',ImgName,'.mat')
-    save(Savep_mat,'mask','merge','ROIs', '-v7.3');
+%     % Save mat
+%     Savep_mat = strcat(dirp,'\maskMat\',ImgName,'.mat')
+%     save(Savep_mat,'mask','merge','ROIs', '-v7.3');
     closereq
 end
 close('force')

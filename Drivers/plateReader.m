@@ -1,17 +1,15 @@
 %% Load plate reader data
 clear
 clc
-path = 'D:\OneDrive - rice.edu\Francois\ASAPScreening\Wet\Data\Spectrum\20200720_1Pspectra'; 
-fName = '2020_07_20_Gevi_spectra_trial3_1_HEKcells_gain100.xlsx';
-fLookUp = '20200720Lookup_JEDIs';
-TEx = [readtable(fullfile(path,fName),'Range','B47:F94','ReadVariableNames',true),...
-    readtable(fullfile(path,fName),'Range','K47:L94','ReadVariableNames',true)];
-TEm = [readtable(fullfile(path,fName),'Range','B98:F162','ReadVariableNames',true),...
-    readtable(fullfile(path,fName),'Range','K98:L162','ReadVariableNames',true)];
-lookUp = readtable(fullfile(path,fLookUp),'Range','A1:B16','ReadVariableNames',true);
+path = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\1P spectra\20201104_1Pspectra'; 
+fName = '20201104 1P Spectra 1nm spacing GEVI.xlsx';
+fLookUp = '20201104Lookup_JEDIs';
+TEx = [readtable(fullfile(path,fName),'Range','B47:J193','ReadVariableNames',true)];
+TEm = [readtable(fullfile(path,fName),'Range','B197:J393','ReadVariableNames',true)];
+lookUp = readtable(fullfile(path,fLookUp),'Range','A1:B9','ReadVariableNames',true);
 lookUp.Properties.RowNames = lookUp.Well;
 refBuffer = 'External';
-refCell = 'HEK';
+refCell = 'Kir';
 
 %% Re-arrange data
 ExScan = TEx.Wavelength';
@@ -21,8 +19,7 @@ Ex.Well = TEx.Properties.VariableNames(2:end)';
 traces = sig.arbitrary.empty();
 for i = 1:height(Ex)
     Ex.Name{i} = lookUp.Name{Ex.Well{i}};
-    s = sig.arbitrary();
-    s.setSignal(ExScan, TEx{:,Ex.Well{i}}');    
+    s = sig.arbitrary('x', ExScan, 'y', TEx{:,Ex.Well{i}}');    
     traces(i, 1) = s;
 end
 Ex.rawTrace = traces;
@@ -32,8 +29,7 @@ Em.Well = TEm.Properties.VariableNames(2:end)';
 traces = sig.arbitrary.empty();
 for i = 1:height(Em)
     Em.Name{i} = lookUp.Name{Em.Well{i}};
-    s = sig.arbitrary();
-    s.setSignal(EmScan, TEm{:,Em.Well{i}}');    
+    s = sig.arbitrary('x', EmScan,'y', TEm{:,Em.Well{i}}');    
     traces(i, 1) = s;
 end
 Em.rawTrace = traces;
@@ -51,18 +47,15 @@ traces = sig.arbitrary.empty();
 normtraces = sig.arbitrary.empty();
 ctcrttraces = sig.arbitrary.empty();
 for i = 1:height(gEx)
-    s = sig.arbitrary();
-    s.setSignal(ExScan, gEx.rawTrace(i).y-gEx.rawTrace(refBuffer).y);    
+    s = sig.arbitrary('x', ExScan, 'y', gEx.rawTrace(i).y-gEx.rawTrace(refBuffer).y);    
     traces(i, 1) = s;
-    s1 = sig.arbitrary();
-    s1.setSignal(ExScan, normalize(gEx.rawTrace(i).y-gEx.rawTrace(refBuffer).y,'range')); 
+    s1 = sig.arbitrary('x', ExScan, 'y', normalize(gEx.rawTrace(i).y-gEx.rawTrace(refBuffer).y,'range')); 
     normtraces(i, 1) = s1;
-    s2 = sig.arbitrary();
     name = split(gEx.Name{i},'_');
     if sum(strcmp(name{1},lookUp.Name)) == 0
-        s2.setSignal(ExScan, normalize(gEx.rawTrace(i).y-gEx.rawTrace(refCell).y,'range'));
+        s2 = sig.arbitrary('x', ExScan, 'y', normalize(gEx.rawTrace(i).y-gEx.rawTrace(refCell).y,'range'));
     else
-        s2.setSignal(ExScan, normalize(gEx.rawTrace(i).y-gEx.rawTrace(name{1}).y,'range'));
+        s2 = sig.arbitrary('x', ExScan, 'y', normalize(gEx.rawTrace(i).y-gEx.rawTrace(name{1}).y,'range'));
     end
     ctcrttraces(i, 1) = s2;
 end
@@ -81,18 +74,15 @@ traces = sig.arbitrary.empty();
 normtraces = sig.arbitrary.empty();
 ctcrttraces = sig.arbitrary.empty();
 for i = 1:height(gEm)
-    s = sig.arbitrary();
-    s.setSignal(EmScan, gEm.rawTrace(i).y-gEm.rawTrace(refBuffer).y);    
+    s = sig.arbitrary('x', EmScan, 'y', gEm.rawTrace(i).y-gEm.rawTrace(refBuffer).y);    
     traces(i, 1) = s;
-    s1 = sig.arbitrary();
-    s1.setSignal(EmScan, normalize(gEm.rawTrace(i).y-gEm.rawTrace(refBuffer).y,'range')); 
+    s1 = sig.arbitrary('x', EmScan, 'y', normalize(gEm.rawTrace(i).y-gEm.rawTrace(refBuffer).y,'range')); 
     normtraces(i, 1) = s1;
-    s2 = sig.arbitrary();
     name = split(gEm.Name{i},'_');
     if sum(strcmp(name{1},lookUp.Name)) == 0
-        s2.setSignal(EmScan, normalize(gEm.rawTrace(i).y-gEm.rawTrace(refCell).y,'range'));
+        s2 = sig.arbitrary('x', EmScan, 'y', normalize(gEm.rawTrace(i).y-gEm.rawTrace(refCell).y,'range'));
     else
-        s2.setSignal(EmScan, normalize(gEm.rawTrace(i).y-gEm.rawTrace(name{1}).y,'range'));
+        s2 = sig.arbitrary('x', EmScan, 'y', normalize(gEm.rawTrace(i).y-gEm.rawTrace(name{1}).y,'range'));
     end
     ctcrttraces(i, 1) = s2;    
 end
@@ -101,79 +91,72 @@ gEm.('background corrected traces normalized') = normtraces;
 gEm.('celltype corrected Traces normalized') = ctcrttraces;
 
 %% Save
-save(fullfile(path,'1Pspectra_from_platereader.mat'),'gEm','gEx','Ex','Em','lookUp');
+save(fullfile(path,'20201104 1P Spectra 1nm spacing GEVI.mat'),'gEm','gEx','Ex','Em','lookUp');
 
 %%
 cmap = colormap(lines);
-colNames = {'background corrected traces','background corrected traces normalized','celltype corrected Traces normalized'};
-for i = 1:3
-colName = colNames{i};
-figure(i)
-clf
-sgtitle(colName)
-subplot(2,3,1)
-hold on
-plot(gEx.(colName)('Kir_EGFP').x,gEx.(colName)('Kir_EGFP').y,'b-')
-plot(gEx.(colName)('HEK_EGFP').x,gEx.(colName)('HEK_EGFP').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir_EGFP').x,gEm.(colName)('Kir_EGFP').y,'g-')
-plot(gEm.(colName)('HEK_EGFP').x,gEm.(colName)('HEK_EGFP').y,'color',cmap(5,:))
-title('EGFP')
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
-
-subplot(2,3,2)
-hold on
-plot(gEx.(colName)('Kir_EGFP-CAAX').x,gEx.(colName)('Kir_EGFP-CAAX').y,'b-')
-plot(gEx.(colName)('HEK_EGFP-CAAX').x,gEx.(colName)('HEK_EGFP-CAAX').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir_EGFP-CAAX').x,gEm.(colName)('Kir_EGFP-CAAX').y,'g-')
-plot(gEm.(colName)('HEK_EGFP-CAAX').x,gEm.(colName)('HEK_EGFP-CAAX').y,'color',cmap(5,:))
-title('EGFP-CAAX')
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
-
-subplot(2,3,3)
-hold on
-plot(gEx.(colName)('Kir_ASAP1').x,gEx.(colName)('Kir_ASAP1').y,'b-')
-plot(gEx.(colName)('HEK_ASAP1').x,gEx.(colName)('HEK_ASAP1').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir_ASAP1').x,gEm.(colName)('Kir_ASAP1').y,'g-')
-plot(gEm.(colName)('HEK_ASAP1').x,gEm.(colName)('HEK_ASAP1').y,'color',cmap(5,:))
-title('ASAP1')
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
-
-subplot(2,3,4)
-hold on
-plot(gEx.(colName)('Kir_ASAP2s').x,gEx.(colName)('Kir_ASAP2s').y,'b-')
-plot(gEx.(colName)('HEK_ASAP2s').x,gEx.(colName)('HEK_ASAP2s').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir_ASAP2s').x,gEm.(colName)('Kir_ASAP2s').y,'g-')
-plot(gEm.(colName)('HEK_ASAP2s').x,gEm.(colName)('HEK_ASAP2s').y,'color',cmap(5,:))
-title('ASAP2s')
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
-
-subplot(2,3,5)
-hold on
-plot(gEx.(colName)('Kir_JEDI-1P').x,gEx.(colName)('Kir_JEDI-1P').y,'b-')
-plot(gEx.(colName)('HEK_JEDI-1P').x,gEx.(colName)('HEK_JEDI-1P').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir_JEDI-1P').x,gEm.(colName)('Kir_JEDI-1P').y,'g-')
-plot(gEm.(colName)('HEK_JEDI-1P').x,gEm.(colName)('HEK_JEDI-1P').y,'color',cmap(5,:))
-title('JEDI-1P')
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
-
-subplot(2,3,6)
-hold on
-plot(gEx.(colName)('Kir_JEDI-2P').x,gEx.(colName)('Kir_JEDI-2P').y,'b-')
-plot(gEx.(colName)('HEK_JEDI-2P').x,gEx.(colName)('HEK_JEDI-2P').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir_JEDI-2P').x,gEm.(colName)('Kir_JEDI-2P').y,'g-')
-plot(gEm.(colName)('HEK_JEDI-2P').x,gEm.(colName)('HEK_JEDI-2P').y,'color',cmap(5,:))
-title('JEDI-2P')
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
-set(gcf, 'Position',  [50, 10, 1000, 600])
-
+colNames = ["background corrected traces";...
+    "background corrected traces normalized";...
+    "celltype corrected Traces normalized"];
+sel = ["EGFP"; "EGFP-CAAX"; "ASAP2s"; "JEDI-1P"; "JEDI-2P"; "Kir"];
+for j = 1:length(colNames)
+    f = figure();
+    t = tiledlayout(f, 'flow', 'Padding', 'none');
+    colName = colNames{j};
+    t.Title.String = colName;
+    for i = 1:length(sel)
+        ax = nexttile(t);
+        hold(ax, 'on');
+        chrom = sel(i);
+        if chrom ~= refCell;
+    %         plot(gEx.(colName)('Kir_EGFP').x,gEx.(colName)('Kir_EGFP').y,'b-')
+            l(1) = plot(gEx.(colName)("HEK_" + chrom).x,gEx.(colName)("HEK_" + chrom).y, ...
+                'color', cmap(6,:), 'DisplayName', "Ex-HEK");
+    %         plot(gEm.(colName)('Kir_EGFP').x,gEm.(colName)('Kir_EGFP').y,'g-')
+            l(2) = plot(gEm.(colName)("HEK_" + chrom).x,gEm.(colName)("HEK_" + chrom).y,...
+                'color',cmap(5,:), 'DisplayName', "Em-HEK");
+        else
+                %         plot(gEx.(colName)('Kir_EGFP').x,gEx.(colName)('Kir_EGFP').y,'b-')
+            l(1) = plot(gEx.(colName)(chrom).x,gEx.(colName)(chrom).y, ...
+                'color', cmap(6,:), 'DisplayName', "Ex-HEK");
+    %         plot(gEm.(colName)('Kir_EGFP').x,gEm.(colName)('Kir_EGFP').y,'g-')
+            l(2) = plot(gEm.(colName)(chrom).x,gEm.(colName)(chrom).y,...
+                'color',cmap(5,:), 'DisplayName', "Em-HEK");
+        end
+        ax.Title.String = chrom;
+        legend(l)
+        xlabel(ax, 'Wavelength (nm)');
+        ylabel(ax, 'Fluorescent Intensity (a.u.)');
+    end
 end
+%% merge traces
+f = figure();
+cmap = lines;
+t = tiledlayout(f, 'flow', 'Padding', 'none');
+colName = colNames{3};
+t.Title.String = colName;
+% Excitation
+ax = nexttile(t);
+hold(ax, 'on');
+for i = 1:length(sel)-1
+    chrom = sel(i);
+    l(i) = plot(gEx.(colName)("HEK_" + chrom).x,gEx.(colName)("HEK_" + chrom).y, ...
+                'color', cmap(i,:), 'DisplayName', chrom);
+end
+legend(l);
+ax.Title.String = "Excitation Spectra";
+xlabel(ax, 'Wavelength (nm)');
+ylabel(ax, 'Fluorescent Intensity (a.u.)');
 
-%%
-
-figure()
-hold on
-plot(gEx.(colName)('Kir').x,gEx.(colName)('Kir').y,'b-')
-plot(gEx.(colName)('HEK').x,gEx.(colName)('HEK').y,'color',cmap(6,:))
-plot(gEm.(colName)('Kir').x,gEm.(colName)('Kir').y,'g-')
-plot(gEm.(colName)('HEK').x,gEm.(colName)('HEK').y,'color',cmap(5,:))
-legend('Ex-Kir','Ex-HEK','Em-Kir','Em-HEK')
+% Emission
+ax = nexttile(t);
+hold(ax, 'on');
+for i = 1:length(sel)-1
+    chrom = sel(i);
+    l(i) = plot(gEm.(colName)("HEK_" + chrom).x,gEm.(colName)("HEK_" + chrom).y, ...
+                'color', cmap(i,:), 'DisplayName', chrom);
+end
+legend(l);
+ax.Title.String = "Excitation Spectra";
+xlabel(ax, 'Wavelength (nm)');
+ylabel(ax, 'Normalized Fluorescence');
