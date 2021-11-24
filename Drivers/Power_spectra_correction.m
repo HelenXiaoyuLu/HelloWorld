@@ -1,7 +1,8 @@
 %% Collect all power correction table 
 % As of 09/10/2020
-
-T1 = load('D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\20200215 Spectra mGold\20200215_peakvaluest_jobs_700-20-1080');
+path = 'C:\Users\13801\OneDrive\Documents\Thorlabs\Optical Power Monitor';
+fname = '';
+T1 = load('tra mGold\20200215_peakvaluest_jobs_700-20-1080');
 T = table();
 T.Wavelength = T1.peakvaluest(1,:)';
 T.("Power at Sample Plane") = T1.peakvaluest(2,:)';

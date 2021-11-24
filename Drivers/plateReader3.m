@@ -1,23 +1,19 @@
 %% Load plate reader data
 clear
 clc
-path = 'D:\OneDrive - Baylor College of Medicine\Paper_201906_GEVI\Spectra\1P spectra\20210406 JEDI pH Spectra'; 
-fName1 = '2021_04_06_GEVI Spectra II_1nm steps - merged.xlsx';
-fName2 = '2021_04_06_GEVI Spectra.xlsx';
-fLookUp = '20210406Lookup_GEVIpH';
-TEx1 = readtable(fullfile(path,fName1),'Range','B47:AM203','ReadVariableNames',true);
-TEx2 = readtable(fullfile(path,fName2),'Range','B47:AM98','ReadVariableNames',true);
-% TEx3 = [readtable(fullfile(path,fName3),'Range','B47:B188','ReadVariableNames',true),...
-%     readtable(fullfile(path,fName3),'Range','G47:L188','ReadVariableNames',true)];
-TEm1 = readtable(fullfile(path,fName1),'Range','B207:AM398','ReadVariableNames',true);
-TEm2 = readtable(fullfile(path,fName2),'Range','B102:AM166','ReadVariableNames',true);
-% TEm3 = [readtable(fullfile(path,fName3),'Range','B192:B256','ReadVariableNames',true),...
-%     readtable(fullfile(path,fName3),'Range','G192:L256','ReadVariableNames',true)];
+path = '\\Stpierrelab7910\e\Images\Xiaoyu\20210408 JEDI pH Spectra and Isosbestic point\Isosbestic point'; 
+fName1 = '20210408 1P spectra Xiaoyu 2nd trial default export - merged.xlsx';
+fLookUp = '20210408Lookup_GEVIIsosbesticpoint';
+
+TEx1 = readtable(fullfile(path,fName1),'Range','B47:AL233','ReadVariableNames',true);
+% TEx2 = readtable(fullfile(path,fName2),'Range','B47:AL98','ReadVariableNames',true);
+TEm1 = readtable(fullfile(path,fName1),'Range','B237:AM398','ReadVariableNames',true);
+% TEm2 = readtable(fullfile(path,fName2),'Range','B102:AL166','ReadVariableNames',true);
 lookUp = readtable(fullfile(path,fLookUp),'Range','A:B','ReadVariableNames',true);
 lookUp.Properties.RowNames = lookUp.Well;
 refBuffer = 'External_6pt55';
 refCell = 'Kir';
-movmeanwindow = 10;
+movmeanwindow = 5;
 
 %% Re-arrange data
 TEx = TEx1;
@@ -28,41 +24,41 @@ TEm = fillmissing(TEm, 'constant', 0);
 
 ExScan1 = TEx.Wavelength';
 EmScan1 = TEm.Wavelength';
-Ex1 = table(); 
-Ex1.Well = TEx.Properties.VariableNames(2:end)';
+Ex = table(); 
+Ex.Well = TEx.Properties.VariableNames(2:end)';
 traces = sig.arbitrary.empty();
-for i = 1:height(Ex1)
-    Ex1.Name{i} = lookUp.Name{Ex1.Well{i}};
+for i = 1:height(Ex)
+    Ex.Name{i} = lookUp.Name{Ex.Well{i}};
     s = sig.arbitrary();
-    s.setSignal('x',ExScan1, 'y', TEx{:,Ex1.Well{i}}');    
+    s.setSignal('x',ExScan1, 'y', movmean(TEx{:,Ex.Well{i}}', movmeanwindow));    
     traces(i, 1) = s;
 end
-Ex1.rawTrace = traces;
-Em1 = table();
-Em1.Well = TEm.Properties.VariableNames(2:end)';
+Ex.rawTrace = traces;
+
+Em = table();
+Em.Well = TEm.Properties.VariableNames(2:end)';
 traces = sig.arbitrary.empty();
-for i = 1:height(Em1)
-    Em1.Name{i} = lookUp.Name{Em1.Well{i}};
+for i = 1:height(Em)
+    Em.Name{i} = lookUp.Name{Em.Well{i}};
     s = sig.arbitrary();
-    s.setSignal('x', EmScan1, 'y', TEm{:,Em1.Well{i}}');    
+    s.setSignal('x', EmScan1, 'y', TEm{:,Em.Well{i}}');    
     traces(i, 1) = s;
 end
-Em1.rawTrace = traces;
+Em.rawTrace = traces;
 
 %% Group data
+parsegevi = @(s) extractBefore(s, '_');
 bgcrt = @(tr1,tr2) tr1.y - tr2.y;
 gEx = table();
-Exgroups = findgroups(Ex1.Name);
-gEx.Name = splitapply(@unique, Ex1.Name, Exgroups);
+Exgroups = findgroups(Ex.Name);
+gEx.Name = splitapply(@unique, Ex.Name, Exgroups);
 gEx.Properties.RowNames = gEx.Name;
-gEx.n_well = splitapply(@numel, Ex1.Name, Exgroups);
-gEx.rawTrace = splitapply(@mean, Ex1.rawTrace,  Exgroups);
-gEx.rawTraceStd = splitapply(@std, Ex1.rawTrace,  Exgroups);
+gEx.n_well = splitapply(@numel, Ex.Name, Exgroups);
+gEx.rawTrace = splitapply(@mean, Ex.rawTrace,  Exgroups);
+gEx.rawTraceStd = splitapply(@std, Ex.rawTrace,  Exgroups);
 traces = sig.arbitrary.empty();
 normtraces = sig.arbitrary.empty();
-normRawtraces = 'rawTrace normalized';
 ctcrttraces = sig.arbitrary.empty();
-ctsmoothtraces = sig.arbitrary.empty();
 ExPeakWL = zeros(height(gEx), 1);
 for i = 1:height(gEx)
     s = sig.arbitrary();
@@ -78,31 +74,26 @@ for i = 1:height(gEx)
     else
         s2.setSignal('x', ExScan1, 'y', normalize(gEx.rawTrace(i).y-gEx.rawTrace(name{1}).y,'range'));
     end
-    smoothex = movmean(s2.y, movmeanwindow);
-    s3 = sig.arbitrary();
-    s3.setSignal('x', ExScan1, 'y', smoothex);
-    [~, idx] = max(smoothex);
+    [~, idx] = max(s2.y);
     ExPeakWL(i) = s2.x(idx);
     ctcrttraces(i, 1) = s2;
-    ctsmoothtraces(i, 1) = s3;
 end
 gEx.('background corrected traces') = traces;
 gEx.('background corrected traces normalized') = normtraces;
 gEx.('celltype corrected Traces normalized') = ctcrttraces;
-gEx.("celltype corrected Traces normalized movemean = " + movmeanwindow) = ctsmoothtraces;
 gEx.("Excitation Peak") = ExPeakWL;
+gEx.("GEVI") = string(cat(2, arrayfun(parsegevi, gEx.Name)));
 
 gEm = table();
-Emgroups = findgroups(Em1.Name);
-gEm.Name = splitapply(@unique, Em1.Name, Emgroups);
+Emgroups = findgroups(Em.Name);
+gEm.Name = splitapply(@unique, Em.Name, Emgroups);
 gEm.Properties.RowNames = gEm.Name;
-gEm.n_well = splitapply(@numel, Em1.Name, Emgroups);
-gEm.rawTrace = splitapply(@mean, Em1.rawTrace,  Emgroups);
-gEm.rawTraceStd = splitapply(@std, Em1.rawTrace,  Emgroups);
+gEm.n_well = splitapply(@numel, Em.Name, Emgroups);
+gEm.rawTrace = splitapply(@mean, Em.rawTrace,  Emgroups);
+gEm.rawTraceStd = splitapply(@std, Em.rawTrace,  Emgroups);
 traces = sig.arbitrary.empty();
 normtraces = sig.arbitrary.empty();
 ctcrttraces = sig.arbitrary.empty();
-ctsmoothtraces = sig.arbitrary.empty();
 EmPeakWL = zeros(height(gEm), 1);
 for i = 1:height(gEm)
     s = sig.arbitrary();
@@ -118,22 +109,15 @@ for i = 1:height(gEm)
     else
         s2.setSignal('x', EmScan1, 'y', normalize(gEm.rawTrace(i).y-gEm.rawTrace(name{1}).y,'range'));
     end
-    smoothem = movmean(s2.y, movmeanwindow);
-    [~, idx] = max(smoothem);
-    s3 = sig.arbitrary();
-    s3.setSignal('x', EmScan1, 'y', smoothem);
+    [~, idx] = max(s2.y);
     EmPeakWL(i) = s2.x(idx);
     ctcrttraces(i, 1) = s2;  
-    ctsmoothtraces(i, 1) = s3;
 end
 gEm.('background corrected traces') = traces;
 gEm.('background corrected traces normalized') = normtraces;
 gEm.('celltype corrected Traces normalized') = ctcrttraces;
-gEm.("celltype corrected Traces normalized movemean = " + movmeanwindow) = ctsmoothtraces;
 gEm.("Emission Peak") = EmPeakWL;
-
-%% Save
-save(fullfile(path,'1Pspectra_from_platereader.mat'),'gEm','gEx','Ex1','Em1','lookUp');
+gEm.("GEVI") = string(cat(2, arrayfun(parsegevi, gEm.Name)));
 
 %% Figure in general
 cmap = colormap(lines);
@@ -156,34 +140,38 @@ for tracetypes = 1:length(colNames)
         plot(gEx.("Excitation Peak")(Variant), trEx.x2y(gEx.("Excitation Peak")(Variant)), '+r');
         plot(trEm.x, trEm.y, 'color',cmap(5,:), 'DisplayName', Variant);
         plot(gEm.("Emission Peak")(Variant), trEm.x2y(gEm.("Emission Peak")(Variant)), '+r');
-        title(Variant, 'Interpreter', 'latex');
+        title(Variant);
     end
     
     sgtitle(tracetype);
 end
 
 %% Group by pH
+gExrmvExternal = gEx(~contains(gEx.GEVI, 'External'), :);
+gExrmvExternal = gExrmvExternal(~(gExrmvExternal.GEVI == ""),:);
 T_ex = table();
-GEVIs = ["EGFP-CAAX", "dpOPT-CAAX", "lyn-EGFP", "lyn-dpOPT",  "JEDI-1P", "JEDI-2P"];
+GEVIs = gExrmvExternal.GEVI;
 pH = ["6pt55", "7pt97"];
 celltype = ["HEK", "Kir"];
-T_ex.Name = GEVIs';
+grouping = findgroups(GEVIs);
+T_ex.Name = splitapply(@unique, GEVIs, grouping);
 for i = 1:numel(pH)
     for j = 1:numel(celltype)
         condition = "pH" + pH(i) + "_" + celltype(j);
-        conditionidx = contains(gEx.Name, pH(i)) & contains(gEx.Name, celltype(j));
-        T_ex.(condition) = gEx(conditionidx,:);
+        conditionidx = contains(gExrmvExternal.Name, pH(i)) & contains(gExrmvExternal.Name, celltype(j));
+        T_ex.(condition) = gExrmvExternal(conditionidx,:);
     end
 end
 T_ex.Properties.RowNames = T_ex.Name;
 
+gEmrmvExternal = gEm(~contains(gEm.GEVI, 'External'), :);
 T_em = table();
-T_em.Name = GEVIs';
+T_em.Name = splitapply(@unique, GEVIs, grouping);
 for i = 1:numel(pH)
     for j = 1:numel(celltype)
         condition = "pH" + pH(i) + "_" + celltype(j);
-        conditionidx = contains(gEm.Name, pH(i)) & contains(gEm.Name, celltype(j));
-        T_em.(condition) = gEm(conditionidx,:);
+        conditionidx = contains(gEmrmvExternal.Name, pH(i)) & contains(gEmrmvExternal.Name, celltype(j));
+        T_em.(condition) = gEmrmvExternal(conditionidx,:);
     end
 end
 T_em.Properties.RowNames = T_em.Name;
@@ -210,11 +198,12 @@ for g = 1:numel(GEVIsel)
             plot(ax, T_crop.(condition).(TraceType)(1).x, ...
                 T_crop.(condition).(TraceType)(1).y, ...
                 'DisplayName', 'Emission ' + pH(i), 'color',cmap(5,:), 'LineStyle', ls{i})
-            title(celltype(j), 'Interpreter', 'latex');
-            xlabel('wavelength (nm)')
-            ylabel('Normalize Ex/Em')
+            title(condition, 'Interpreter', 'latex');
             legend();
         end
     end
     sgtitle(GEVIsel(g));
 end
+%%
+
+save(fullfile(path,'1Pspectra_from_platereader.mat'),'gEm','gEx','Ex1','Em1','lookUp');
